@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
 {% block content %}
-    <h1 class = "h4 mb-3">{{libro.titulo}}</h1>
-    <p><strong>Autor:</strong> {{libro.autor}}</p>
-    <p><strong>Precio:</strong> {{libro.precio}}</p>
-    <img src="{{libro.imagen.url}}" alt="imagen de {{libro.titulo}}">
+    <h1 class = "h4 mb-3">{{object.titulo}}</h1>
+    <p><strong>Autor:</strong> {{ object.autor}}</p>
+    <p><strong>Precio:</strong> {{object.precio}}</p>
+    <p><strong>Stock:</strong> {{object.stock}}</p>
+    {% if object.imagen %}<img src="{{ object.imagen.url }}" alt="{{ object.titulo }}" class="img-fluid">{% endif %}
     <a class="btn btn-outline-secondary" href="{% url 'libro_list' %">Volver</a>
 {% endblock %}

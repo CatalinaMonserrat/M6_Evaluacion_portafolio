@@ -1,13 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
-    <h1 class = "h4 mb-3">Libros</h1>
-    <ul>
-        {% for libro in libros %}
-            <li>
-                <a href="{% url 'libro_detail' libro.id %}">{{ libro.titulo }}</a> - {{ libro.autor }}
-            </li>
-        {% empty %}
-            <li>No hay libros aún.</li>
-        {% endfor %}
-    </ul>
+<h1 class="h4 mb-3">Libros</h1>
+<div class="row">
+    {% for l in libros %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            {% if l.imagen %}
+            <img src="{{ l.imagen.url }}" class="card-img-top" alt="{{ l.titulo }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ l.titulo }}</h5>
+                <p class="card-text">{{ l.autor }}</p>
+                <p class="fw-bold">${{ l.precio }} — Stock: {{ l.stock }}</p>
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'libro_detail' l.pk %}">Detalles</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>No hay libros aún.</p>
+    {% endfor %}
+</div>
 {% endblock %}
