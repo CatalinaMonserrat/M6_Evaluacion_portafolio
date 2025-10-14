@@ -6,7 +6,19 @@ from .models import Libro, Pedido, LineaPedido
 from .forms import CheckoutForm
 
 def home(request):
-    return render(request, 'home.html')
+    return render(request, 'productos/home.html')
+
+def ver_carrito(request):
+    return render(request, 'productos/carrito.html', {'items': [], 'total': 0})
+
+class LibroListView(ListView):
+    model = Libro
+    template_name = 'productos/libro_list.html'
+    context_object_name = 'libros'
+
+class LibroDetailView(DetailView):
+    model = Libro
+    template_name = 'productos/libro_detail.html'
 
 def _get_cart(session):
     return session.setdefault('cart', {})  # {libro_id: cantidad}

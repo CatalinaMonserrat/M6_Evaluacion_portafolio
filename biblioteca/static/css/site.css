@@ -1,0 +1,5 @@
+.book-grid .card { box-shadow: 0 2px 6px rgba(0,0,0,.05); }
+.book-card img   { height: 220px; object-fit: cover; }
+.book-title      { font-size: .98rem; margin-bottom: .25rem; }
+.book-author     { font-size: .85rem; color:#6c757d; margin-bottom:.4rem; }
+.book-price      { font-weight: 600; font-size: .95rem; }

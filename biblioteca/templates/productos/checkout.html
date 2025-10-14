@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Checkout</h1>
+
+<div class="row g-4">
+    <div class="col-lg-7 order-2 order-lg-1">
+        <h2 class="h6">Resumen</h2>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Libro</th>
+                        <th style="width:120px">Cant.</th>
+                        <th style="width:160px">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for it in items %}
+                    <tr>
+                        <td>{{ it.libro.titulo }}</td>
+                        <td>{{ it.cantidad }}</td>
+                        <td>${{ it.subtotal }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="fw-bold">Total: ${{ total }}</p>
+    </div>
+
+    <div class="col-lg-5 order-1 order-lg-2">
+        <h2 class="h6">Datos de envío</h2>
+        <form method="post" class="card card-body">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-success">Confirmar pedido</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

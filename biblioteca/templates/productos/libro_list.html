@@ -1,18 +1,61 @@
 {% extends 'base.html' %}
+{% block title %}Catálogo{% endblock %}
 {% block content %}
-<h1 class="h4 mb-3">Libros</h1>
-<div class="row">
+<h1 class="h5 mb-3">Libros</h1>
+
+<style>
+    /* Solo para esta página */
+    .book-card img {
+        width: 100%;
+        height: 220px;
+        /* <- tamaño uniforme */
+        object-fit: cover;
+        /* recorta sin deformar */
+        object-position: center;
+    }
+
+    .book-card .card-body {
+        padding: .8rem .9rem;
+    }
+
+    .book-title {
+        font-size: .98rem;
+        margin-bottom: .25rem;
+    }
+
+    .book-author {
+        font-size: .85rem;
+        color: #6c757d;
+        margin-bottom: .4rem;
+    }
+
+    .book-price {
+        font-weight: 600;
+        font-size: .95rem;
+    }
+</style>
+
+<!-- Grid: 2 columnas en móvil, 3 en md, 4 en lg -->
+<div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
     {% for l in libros %}
-    <div class="col-md-4 mb-3">
-        <div class="card h-100">
+    <div class="col">
+        <div class="card h-100 shadow-sm book-card">
             {% if l.imagen %}
-            <img src="{{ l.imagen.url }}" class="card-img-top" alt="{{ l.titulo }}">
+            <img src="{{ l.imagen.url }}" alt="{{ l.titulo }}">
+            {% else %}
+            <div class="bg-light" style="height:220px;"></div>
             {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">{{ l.titulo }}</h5>
-                <p class="card-text">{{ l.autor }}</p>
-                <p class="fw-bold">${{ l.precio }} — Stock: {{ l.stock }}</p>
-                <a class="btn btn-sm btn-outline-primary" href="{% url 'libro_detail' l.pk %}">Detalles</a>
+            <div class="card-body d-flex flex-column">
+                <h6 class="book-title">{{ l.titulo }}</h6>
+                <div class="book-author">{{ l.autor }}</div>
+                <div class="mb-2">
+                    <span class="book-price">${{ l.precio }}</span>
+                    <span class="text-muted"> · Stock: {{ l.stock }}</span>
+                </div>
+                <div class="mt-auto d-flex gap-2">
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'libro_detail' l.pk %}">Detalles</a>
+                    <a class="btn btn-sm btn-primary" href="{% url 'agregar_carrito' l.pk %}">Agregar</a>
+                </div>
             </div>
         </div>
     </div>
