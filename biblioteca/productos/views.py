@@ -1,15 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login 
+from django.contrib.auth.decorators import login_required, permission_required
 from .models import Libro, Pedido, LineaPedido
-from .forms import CheckoutForm
+from .forms import CheckoutForm, SignUpForm 
 
 def home(request):
     return render(request, 'productos/home.html')
 
 def ver_carrito(request):
     return render(request, 'productos/carrito.html', {'items': [], 'total': 0})
+
+def signup(request):
+    if request.method == "POST":
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)           
+            return redirect('home')         
+    else:
+        form = SignUpForm()
+    return render(request, 'signup.html', {'form': form})
 
 class LibroListView(ListView):
     model = Libro
@@ -50,63 +62,68 @@ def ver_carrito(request):
         items.append({'libro': libro, 'cantidad': qty, 'subtotal': subtotal})
     return render(request, 'productos/carrito.html', {'items': items, 'total': total})
 
-@login_required
-def checkout(request):
-    cart = _get_cart(request.session)
-    if not cart:
-        messages.warning(request, "El carrito está vacío.")
-        return redirect('libro_list')
 
-    # Construimos el form según método
+@permission_required('productos.view_pedido', raise_exception=True)
+def panel_ventas(request):
+    pedidos = Pedido.objects.order_by('-creado_en')[:20]
+    return render(request, 'productos/panel_ventas.html', {'pedidos': pedidos})
+
+
+@login_required(login_url='login')
+def checkout(request):
+    # lee carrito de sesión
+    cart = request.session.get('cart', {})
+    if not cart:
+        messages.warning(request, "Tu carrito está vacío.")
+        return redirect('ver_carrito')
+
+    # arma items y total (por si quieres mostrar en GET)
+    items, total = [], 0
+    for sid, qty in cart.items():
+        libro = Libro.objects.get(pk=int(sid))
+        subtotal = libro.precio * qty
+        total += subtotal
+        items.append({'libro': libro, 'cantidad': qty, 'subtotal': subtotal})
+
     if request.method == 'POST':
         form = CheckoutForm(request.POST)
         if form.is_valid():
             pedido = Pedido.objects.create(
-                usuario=request.user,
+                usuario=request.user if request.user.is_authenticated else None,
                 nombre=form.cleaned_data['nombre'],
                 email=form.cleaned_data['email'],
                 direccion=form.cleaned_data['direccion'],
             )
-
-            # Validación de stock y creación de líneas
-            for sid, qty in cart.items():
-                libro = get_object_or_404(Libro, pk=int(sid))
-                qty = int(qty)
-                if libro.stock < qty:
-                    messages.error(request, f"No hay suficiente stock de {libro}.")
-                    pedido.delete()
-                    return redirect('libro_list')
-
+            # crea líneas
+            for it in items:
                 LineaPedido.objects.create(
                     pedido=pedido,
-                    libro=libro,
-                    cantidad=qty,
-                    precio_unitario=libro.precio,
+                    libro=it['libro'],
+                    cantidad=it['cantidad'],
+                    precio_unitario=it['libro'].precio,
                 )
-                libro.stock -= qty
-                libro.save()
+                # opcional: descuenta stock
+                it['libro'].stock = max(0, it['libro'].stock - it['cantidad'])
+                it['libro'].save()
 
-            # Vaciar carrito y salir
+            # limpia carrito
             request.session['cart'] = {}
-            messages.success(request, "Pedido creado con éxito.")
+            request.session.modified = True
+
+            messages.success(request, f"¡Pedido #{pedido.id} creado con éxito!")
             return redirect('home')
     else:
-        form = CheckoutForm(initial={
-            'nombre': request.user.get_full_name() or request.user.username,
-            'email': request.user.email
-        })
-
-    # Si es GET o POST inválido, armamos items y total para render
-    items, total = [], Decimal('0')
-    for sid, qty in cart.items():
-        libro = get_object_or_404(Libro, pk=int(sid))
-        qty = int(qty)
-        subtotal = libro.precio * qty  # Decimal * int
-        total += subtotal
-        items.append({'libro': libro, 'cantidad': qty, 'subtotal': subtotal})
+        # precarga datos del usuario si existen
+        initial = {}
+        if request.user.is_authenticated:
+            initial = {
+                'nombre': request.user.get_username(),
+                'email': request.user.email,
+            }
+        form = CheckoutForm(initial=initial)
 
     return render(request, 'productos/checkout.html', {
         'form': form,
         'items': items,
-        'total': total
+        'total': total,
     })

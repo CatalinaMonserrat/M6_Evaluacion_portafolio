@@ -35,4 +35,4 @@ class PedidoAdmin(admin.ModelAdmin):
 
     @admin.display(description='Total')
     def total_admin(self, obj):
-        return obj.total()
+        return obj.total()  
